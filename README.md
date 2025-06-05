@@ -50,7 +50,6 @@
 
 ## 📁 Project Structure
 
-
    ```graphql
     MiniLibrary
     ├── 📦 LibraryAPI                       # Backend (ASP.NET Core Web API)
@@ -81,7 +80,7 @@
     │   ├── BorrowTests.cs
     │   ├── LibraryTests.cs
     │   └── UserTests.cs
-    ```
+   ```
 
 ---
 
