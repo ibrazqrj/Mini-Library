@@ -37,21 +37,20 @@ namespace LibraryAPI.Controllers
             return Ok(_mapper.Map<IEnumerable<Book>>(books));
         }
 
-        // Für Konsolen App
-        //[HttpGet("GetBookById/{id}")]
-        //[SwaggerOperation(
-        //    Summary = "Get a book by the id",
-        //    Description = "Returns a book",
-        //    OperationId = "GetBookById"
-        //)]
-        //[SwaggerResponse(200, "Book found", typeof(Book))]
-        //public ActionResult<Book> GetBookById(int id)
-        //{
-        //    var book = _libraryService.GetBookById(id);
-        //    if (book == null)
-        //        return NotFound("Book not found.");
-        //    return Ok(_mapper.Map<Book>(book));
-        //}
+        [HttpGet("GetBookById/{id}")]
+        [SwaggerOperation(
+            Summary = "Get a book by the id",
+            Description = "Returns a book",
+            OperationId = "GetBookById"
+        )]
+        [SwaggerResponse(200, "Book found", typeof(Book))]
+        public ActionResult<Book> GetBookById(int id)
+        {
+            var book = _libraryService.GetBookById(id);
+            if (book == null)
+                return NotFound("Book not found.");
+            return Ok(_mapper.Map<Book>(book));
+        }
 
         [Authorize(Roles = "Admin")]
         [HttpPost("AddBook")]
