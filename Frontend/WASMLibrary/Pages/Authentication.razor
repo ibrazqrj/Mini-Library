@@ -1,0 +1,11 @@
+﻿@layout AuthenticationLayout
+@page "/authentication/{action}"
+@using Shared
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+<RemoteAuthenticatorView Action="@Action"/>
+
+<WASMLibrary.Index.Index/>
+
+@code{
+    [Parameter] public string? Action { get; set; }
+}

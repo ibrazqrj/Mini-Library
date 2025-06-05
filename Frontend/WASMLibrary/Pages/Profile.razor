@@ -1,0 +1,125 @@
+﻿@page "/profile"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Index
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>Profile</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (isRegistered)
+        {
+            <EditForm Model="@profile" OnValidSubmit="SaveChanges" Context="formContext">
+                <DataAnnotationsValidator />
+                <div class="container">
+                    <h1>Settings</h1>
+                    <div class="row">
+                        <div class="content">
+                            <div class="card">
+                                <div class="card-header"><h4>Public Info</h4></div>
+                                <div class="card-body">
+                                    <label>Username:</label>
+                                    <InputText id="Username" class="input" placeholder="Username" @bind-Value="profile.UserName"/>
+                                    <button class="btn">Save changes</button>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header"><h4>Private Info</h4></div>
+                                <div class="card-body">
+                                    <label>Phone:</label>
+                                    <InputText id="Phone" class="input" placeholder="Phone" @bind-Value="profile.Phone"/>
+                                    <label>Address:</label>
+                                    <InputText id="Address" class="input" placeholder="Address" @bind-Value="profile.Address"/>
+                                    <label>City:</label>
+                                    <InputText id="City" class="input" placeholder="City" @bind-Value="profile.City"/>
+                                    <label>Postalcode:</label>
+                                    <InputText id="Postalcode" class="input" @bind-Value="profile.Postalcode"/>
+                                    <button class="btn">Save changes</button>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header"><h4>Account Info</h4></div>
+                                <div class="card-body">
+                                    <label>Role:</label>
+                                    <p>@userRole</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            
+        }
+    </Authorized>
+    <NotAuthorized>
+        You are not authorized to see this page. Please <a href="authentication/login">Log in</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private ChangeUserDataRequest profile = new();
+    private string ?userRole;
+    private bool isRegistered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var registrationState = await LibraryService.CheckRegistrationState();
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        if (registrationState)
+        {
+            isRegistered = true;
+        }
+        else
+        {
+            isRegistered = false;
+            Snackbar.Add("You are not authorized to see this page. Please complete your registration first.", Severity.Warning);
+            Navigation.NavigateTo("/registration");
+        }
+
+        profile = await LibraryService.GetUserInfo();
+
+        userRole = UserExtensions.GetRole(user);
+    }
+
+    protected async Task SaveChanges()
+    {
+        string fullAddress = $"{profile.Address}, {profile.Postalcode} {profile.City}";
+        var validateAddress = await LibraryService.IsAdressValidAsync(fullAddress);
+
+        if (validateAddress)
+        {
+            var success = await LibraryService.UpdateUserInfo(profile);
+
+            if (success)
+            {
+                Navigation.NavigateTo("/home");
+                Snackbar.Add("Changes saved!", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Something wen't wrong... Please try again.", Severity.Error);
+            }
+        } else
+        {
+            Snackbar.Add("Address not found. Please try again.", Severity.Error);
+        }
+    }
+}    

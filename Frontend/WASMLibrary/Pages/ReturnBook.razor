@@ -1,0 +1,147 @@
+﻿@page "/returnbook"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<PageTitle>New Book</PageTitle>
+
+<PageTitle>Return Book</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        @if (isRegistered)
+        {
+            @if (books == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else
+            {
+                <MudTable Items="@books" Filter="FilterFunc1" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Return book</MudText>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                    </ToolBarContent>
+
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Author</MudTh>
+                        <MudTh>ISBN</MudTh>
+                        <MudTh>Release year</MudTh>
+                        <MudTh>Available</MudTh>
+                    </HeaderContent>
+
+                    <RowTemplate Context="book">
+                        <MudTd DataLabel="Id">@book.Id</MudTd>
+                        <MudTd DataLabel="Title">@book.Title</MudTd>
+                        <MudTd DataLabel="Author">@book.Author</MudTd>
+                        <MudTd DataLabel="ISBN">@book.ISBN</MudTd>
+                        <MudTd DataLabel="Release year">@book.YearPublished</MudTd>
+                        <MudTd DataLabel="Available">@(book.IsAvailable ? "Yes" : "No")</MudTd>
+                    </RowTemplate>
+
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+
+                <hr />
+                <div class="inputform">
+                    <div class="formattedform">
+                        <div class="numericfield">
+                            <MudNumericField @bind-Value="selectedBookId" Label="Book Id" Variant="Variant.Outlined"></MudNumericField>
+                        </div>
+                        <div class="mudButton">
+                            <MudButton Variant="Variant.Filled" OnClick="ReturnBookForUser" StartIcon="@Icons.Material.Filled.Backspace" Color="Color.Warning">Return</MudButton>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </Authorized>
+    <NotAuthorized>
+        You are not authorized to see this page. Please <a href="authentication/login">Log in</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    public ReturnBookRequest bookToReturn = new ReturnBookRequest();
+    private List<Book> books;
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private int selectedBookId { get; set; }
+    private bool isRegistered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var registrationState = await LibraryService.CheckRegistrationState();
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        if (registrationState)
+        {
+            isRegistered = true;
+        }
+        else
+        {
+            isRegistered = false;
+            Snackbar.Add("You are not authorized to see this page. Please complete your registration first.", Severity.Warning);
+            Navigation.NavigateTo("/registration");
+        }
+
+        books = await LibraryService.GetBorrowedBooksByOidAsync();
+    }
+
+    protected async Task ReturnBookForUser()
+    {
+        var bookToReturn = new ReturnBookRequest
+            {
+                BookId = selectedBookId
+            };
+
+        var success = await LibraryService.ReturnBookAsync(bookToReturn);
+
+        if (success)
+        {
+            Snackbar.Add("Book returned sucessfully!", Severity.Success);
+            Navigation.NavigateTo("/home");
+        }
+        else
+        {
+            Snackbar.Add("Book couldn't be returned. Please try again.", Severity.Error);
+        }
+    }
+
+    private bool FilterFunc1(Book book) => FilterFunc(book, searchString1);
+
+    private bool FilterFunc(Book book, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (book.Author.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (book.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{book.ISBN} {book.YearPublished}".Contains(searchString))
+            return true;
+        return false;
+    }
+}

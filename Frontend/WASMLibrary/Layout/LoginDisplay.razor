@@ -1,0 +1,24 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using MudBlazor
+@using WASMLibrary.API
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        <MudMenu Label="@authContext.User.Identity?.Name" StartIcon="@Icons.Material.Filled.AccountCircle" Color="Color.Secondary">
+            <MudMenuItem Href="/profile">Profile</MudMenuItem>
+            <MudDivider />
+            <MudMenuItem @onclick="BeginLogOut">Logout</MudMenuItem>
+        </MudMenu>
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public void BeginLogOut()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+}

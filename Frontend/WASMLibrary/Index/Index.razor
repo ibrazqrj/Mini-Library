@@ -1,0 +1,131 @@
+﻿@layout EmptyLayout
+@page "/"
+@using API
+@using Models.Requests
+@using Shared
+@using MudBlazor
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+@* Required *@
+<MudThemeProvider />
+<MudPopoverProvider />
+
+@* Needed for dialogs *@
+<MudDialogProvider />
+
+@* Needed for snackbars *@
+<MudSnackbarProvider />
+
+<AuthorizeView>
+    <Authorized>
+        You already are logged in! Redirecting...
+
+        @if (!redirected)
+        {
+            RedirectToHome();
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div style="background-color: black; min-height: 100vh;">
+            <link href="css/login.css" rel="stylesheet">
+            <link rel="preconnect" href="https://fonts.gstatic.com">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+            <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+            <div class="background">
+                <div class="shape"></div>
+                <div class="shape"></div>
+            </div>
+
+            @if (showRegister)
+            {
+                <form class="register-form">
+                    <div class="register-return">
+                        <a href="" @onclick="ShowLogin">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 12H18M6 12L11 7M6 12L11 17" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+
+                        </a>
+                    </div>
+
+                    <h3 class=>Sign Up</h3>
+
+                    <label class="register-label" for="name">Name</label>
+                    <input class="register-input" type="text" placeholder="Name" id="name" @bind="name">
+
+                    <label class="register-label" for="username">Username</label>
+                    <input class="register-input" type="text" placeholder="Username" id="username" @bind="username">
+
+                    <label class="register-label" for="password">E-Mail</label>
+                    <input class="register-input" type="email" placeholder="E-Mail" id="email" @bind="email">
+
+                    <button class="register-button">Register</button>
+                </form>
+            }
+            else
+            {
+                <form class="login-form">
+                    <h3>Welcome!</h3>
+
+                    <p>
+                        Access your personal library by signing in with your Microsoft account.
+                        Quick and easy — just one click away from your books.
+                    </p>
+
+                    <div class="bsk-container">
+                        <button class="ms-button" @onclick="BeginLogin">
+                            <object type="image/svg+xml" data="https://s3-eu-west-1.amazonaws.com/cdn-testing.web.bas.ac.uk/scratch/bas-style-kit/ms-pictogram/ms-pictogram.svg" class="x-icon"></object>
+                            Sign In with Microsoft
+                        </button>
+                    </div>
+                </form>
+            }
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string username;
+    private string email;
+    private string name;
+    internal bool showRegister = false;
+    private bool redirected = false;
+
+    private void ShowRegistrationForm()
+    {
+        showRegister = true;
+    }
+
+    private async Task ShowLogin()
+    {
+        showRegister = false;
+    }
+
+    public void BeginLogin()
+    {
+        Navigation.NavigateTo("authentication/login");
+    }
+
+    private async Task RedirectToHome()
+    {
+
+        var checkExistingUser = await LibraryService.CheckExistingUser();
+
+        if (checkExistingUser)
+        {
+            Navigation.NavigateTo("/home", true);
+            redirected = true;
+        }
+        else
+        {
+            Navigation.NavigateTo("/registration", true);
+            redirected = true;
+            Snackbar.Add("Please complete your registration first.", Severity.Warning);
+        }
+
+    }
+}

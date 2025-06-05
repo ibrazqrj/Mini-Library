@@ -1,0 +1,154 @@
+﻿@page "/addbook"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>New Book</PageTitle>
+
+<AuthorizeView Context="authContext">
+    @if (isRegistered && isAdmin)
+    {
+        <MudGrid>
+            <MudItem xs="12" sm="7">
+                <MudPaper Class="pa-4">
+                    <MudForm @ref="form" @bind-IsValid="success" @bind-Errors="errors">
+                        <MudTextField T="string"
+                        Label="Title"
+                        @bind-Value="newBook.Title"
+                        MaxLength="100"
+                        Required="true"
+                        RequiredError="Title is required" />
+
+                        <MudTextField T="string"
+                        Label="Author"
+                        MaxLength="50"
+                        @bind-Value="newBook.Author"
+                        Required="true"
+                        RequiredError="Author is required" />
+
+                        <MudTextField T="string"
+                        Label="ISBN"
+                        @bind-Value="newBook.ISBN"
+                        Required="true"
+                        RequiredError="ISBN is required"
+                        MaxLength="13"
+                        HelperText="e.g. 978-3-16-148410-0" />
+
+                        <MudNumericField T="int"
+                        Label="Release year"
+                        @bind-Value="newBook.YearPublished"
+                        Max="@DateTime.Now.Year"
+                        Required="true"
+                        RequiredError="Release year is required"
+                        HelperText="e.g. 2025" />
+
+                        <div class="d-flex flex-column align-start mb-4">
+                            <MudText Typo="Typo.subtitle1" Class="mb-2">Is the book available?</MudText>
+                            <MudRadioGroup T="bool"
+                            @bind-Value="newBook.IsAvailable"
+                            Required="true"
+                            RequiredError="Please select availability">
+                                <MudRadio Value="true">Yes</MudRadio>
+                                <MudRadio Value="false">No</MudRadio>
+                            </MudRadioGroup>
+                        </div>
+
+                        <div class="d-flex align-center justify-space-between mt-4">
+                            <MudButton OnClick="AddBookToDB"
+                            Disabled="@(form == null || !success)"
+                            Color="Color.Primary"
+                            Variant="Variant.Filled"
+                            Class="ml-auto">
+                                Save Changes
+                            </MudButton>
+                        </div>
+                    </MudForm>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="@(()=>form.Validate())">Validate</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="@(()=>form.ResetAsync())" Class="mx-2">Reset</MudButton>
+                    <MudButton Variant="Variant.Filled" DropShadow="false" OnClick="@(()=>form.ResetValidation())">Reset Validation</MudButton>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="5">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+    else
+    {
+        <p><em>You are not allowed to see this content.</em></p>
+    }
+</AuthorizeView>
+
+
+@code {
+    public AddBookRequest newBook = new AddBookRequest();
+    private int selectedBookId { get; set; }
+    private string role = "Admin";
+    bool success;
+    string[] errors = { };
+    MudForm form;
+    bool isAdmin;
+    bool isRegistered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var registrationState = await LibraryService.CheckRegistrationState();
+        isAdmin = UserExtensions.HasRole(user, role);
+
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        if (registrationState)
+        {
+            isRegistered = true;
+        }
+        else
+        {
+            isRegistered = false;
+            Snackbar.Add("You are not authorized to see this page. Please complete your registration first.", Severity.Warning);
+            Navigation.NavigateTo("/registration");
+        }
+
+        if (!isAdmin)
+        {
+            Navigation.NavigateTo("/");
+            Snackbar.Add("You are not allowed to see this content.", Severity.Warning);
+        }
+    }
+
+    protected async Task AddBookToDB()
+    {
+        var success = await LibraryService.AddBookAsync(newBook);
+
+        if (success)
+        {
+            Snackbar.Add("Book added sucessfully!", Severity.Success);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Snackbar.Add("Book couldn't be added. Please try again.", Severity.Error);
+        }
+    }
+}

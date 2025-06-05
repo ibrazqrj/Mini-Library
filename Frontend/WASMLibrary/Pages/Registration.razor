@@ -1,0 +1,140 @@
+﻿@page "/registration"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>New User</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        <MudGrid>
+            <MudItem xs="12" sm="7">
+                <MudPaper Class="pa-4">
+                    <MudForm @ref="form" @bind-IsValid="success" @bind-Errors="errors">
+                        <MudTextField T="string"
+                        Label="Username"
+                        @bind-Value="newUser.UserName"
+                        MaxLength="100"
+                        Required="true"
+                        RequiredError="Username is required" />
+
+                        <MudTextField T="string"
+                        Label="Number (Phone)"
+                        MaxLength="50"
+                        @bind-Value="newUser.Phone"
+                        Required="true"
+                        RequiredError="Phone number is required" />
+
+                        <MudDatePicker Label="Date of birth"
+                        @bind-Date="newUser.DateOfBirth"
+                        Required="true"
+                        RequiredError="Date of birth is required"/>
+
+                        <MudTextField T="string"
+                        Label="Address"
+                        @bind-Value="newUser.Address"
+                        Required="true"
+                        RequiredError="Address is required"
+                        HelperText="e.g. Grubenstrasse 37" />
+
+                        <MudTextField T="string"
+                        Label="Postalcode"
+                        @bind-Value="newUser.Postalcode"
+                        Required="true"
+                        RequiredError="Postalcode is required"
+                        HelperText="e.g. 4900" />
+
+                        <MudTextField T="string"
+                        Label="City"
+                        @bind-Value="newUser.City"
+                        Required="true"
+                        RequiredError="City is required"
+                        HelperText="e.g. Langenthal" />
+
+                        <div class="d-flex align-center justify-space-between mt-4">
+                            <MudButton OnClick="CompleteRegistration"
+                            Disabled="@(form == null || !success)"
+                            Color="Color.Primary"
+                            Variant="Variant.Filled"
+                            Class="ml-auto">
+                                Save Changes
+                            </MudButton>
+                        </div>
+                    </MudForm>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="@(()=>form.Validate())">Validate</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="@(()=>form.ResetAsync())" Class="mx-2">Reset</MudButton>
+                    <MudButton Variant="Variant.Filled" DropShadow="false" OnClick="@(()=>form.ResetValidation())">Reset Validation</MudButton>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="5">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+    <NotAuthorized>
+        You are not authorized to see this page. Please <a href="authentication/login">Log in</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public RegisterUserRequest newUser = new RegisterUserRequest();
+    string[] errors = { };
+    MudForm form;
+    bool success;
+    DateTime? testDate { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    protected async Task CompleteRegistration()
+    {
+        var userToRegiser = new RegisterUserRequest
+            {
+                UserName = newUser.UserName,
+                Phone = newUser.Phone,
+                DateOfBirth = newUser.DateOfBirth,
+                Address = newUser.Address,
+                Postalcode = newUser.Postalcode,
+                City = newUser.City
+            };
+
+        var success = await LibraryService.RegisterAsync(userToRegiser);
+
+        if (success)
+        {
+            await LibraryService.SetRegistrationStateToTrue();
+            Snackbar.Add("User registered successfully!", Severity.Success);
+            Navigation.NavigateTo("/home");
+        }
+        else
+        {
+            Snackbar.Add("Registration failed. Please try again.", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
+@using WASMLibrary.API
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudMenu Label="Navigation" StartIcon="@Icons.Material.Filled.ListAlt" Color="Color.Primary">
+    <MudMenuItem Href="/home">Home</MudMenuItem>
+    <MudDivider />
+    <MudMenuItem Href="/allbooks">All Books</MudMenuItem>
+    <MudDivider />
+    @if (isAdmin)
+    {
+        <MudMenuItem Href="/addbook">Add Book</MudMenuItem>
+        <MudMenuItem Href="/editbook">Edit Book</MudMenuItem>
+        <MudMenuItem Href="/deletebook">Delete Book</MudMenuItem>
+        <MudDivider />
+    }
+    <MudMenuItem Href="/borrowbook">Borrow Book</MudMenuItem>
+    <MudMenuItem Href="/returnbook">Return Book</MudMenuItem>
+</MudMenu>
+
+@code{
+    private bool isAdmin;
+    private string role = "Admin";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        isAdmin = UserExtensions.HasRole(user, role);
+    }
+}

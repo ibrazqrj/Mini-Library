@@ -1,0 +1,134 @@
+﻿.dashboard {
+    align-content:center
+}
+
+    .dashboard h3 {
+        text-align: center;
+    }
+
+.info-boxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.info-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    transition: box-shadow 0.2s ease;
+}
+
+    .info-box:hover {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-box .box-icon svg {
+        width: 48px;
+        height: 48px;
+        fill: #99a0b0;
+    }
+
+    .info-box .box-iconheart svg {
+        width: 48px;
+        height: 48px;
+        fill: #fd6c7a;
+    }
+
+    .info-box .box-icontoday svg {
+        width: 48px;
+        height: 48px;
+        fill: #ffc107;
+    }
+
+    .info-box .box-icontotal svg {
+        width: 48px;
+        height: 48px;
+        fill: #f0910d;
+    }
+
+    .info-box.active .box-icon svg {
+        fill: #4b84fe;
+    }
+
+    .info-box .box-content {
+        margin-left: 20px;
+    }
+
+        .info-box .box-content .big {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1b253d;
+        }
+
+    .info-box .box-content {
+        color: #99a0b0;
+        font-size: 0.875rem;
+    }
+
+body {
+    margin-top: 20px;
+    background: #F0F8FF;
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 15px 1px rgba(52,40,104,.08);
+}
+
+.card {
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid #e5e9f2;
+    border-radius: .2rem;
+}
+
+.card-header:first-child {
+    border-radius: calc(.2rem - 1px) calc(.2rem - 1px) 0 0;
+}
+
+.card-header {
+    border-bottom-width: 1px;
+}
+
+.card-header {
+    padding: .75rem 1.25rem;
+    margin-bottom: 0;
+    color: inherit;
+    background-color: #fff;
+    border-bottom: 1px solid #e5e9f2;
+}
+
+.card-button {
+    margin-top: 20px;
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}

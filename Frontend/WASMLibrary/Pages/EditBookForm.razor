@@ -1,0 +1,165 @@
+﻿@page "/editbook/{BookId:int}"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>Edit Book</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        @if(isRegistered && isAdmin)
+        {
+            <MudGrid>
+                <MudItem xs="12" sm="7">
+                    <MudPaper Class="pa-4">
+                        <MudForm @ref="form" @bind-IsValid="success" @bind-Errors="errors">
+                            <MudTextField T="string"
+                            Label="Title"
+                            @bind-Value="book.Title"
+                            Required="true"
+                            RequiredError="Title is required" />
+
+                            <MudTextField T="string"
+                            Label="Author"
+                            @bind-Value="book.Author"
+                            Required="true"
+                            RequiredError="Author is required" />
+
+                            <MudTextField T="string"
+                            Label="ISBN"
+                            @bind-Value="book.ISBN"
+                            Required="true"
+                            RequiredError="ISBN is required"
+                            HelperText="e.g. 978-3-16-148410-0" />
+
+                            <MudNumericField T="int"
+                            Label="Release year"
+                            @bind-Value="book.YearPublished"
+                            Required="true"
+                            RequiredError="Release year is required"
+                            HelperText="e.g. 2025" />
+
+                            <div class="d-flex flex-column align-start mb-4">
+                                <MudText Typo="Typo.subtitle1" Class="mb-2">Is the book available?</MudText>
+                                <MudRadioGroup T="bool"
+                                @bind-Value="book.IsAvailable"
+                                Required="true"
+                                RequiredError="Please select availability">
+                                    <MudRadio Value="true">Yes</MudRadio>
+                                    <MudRadio Value="false">No</MudRadio>
+                                </MudRadioGroup>
+                            </div>
+
+                            <div class="d-flex align-center justify-space-between mt-4">
+                                <MudButton OnClick="SaveChanges"
+                                Disabled="@(form == null || !success)"
+                                Color="Color.Primary"
+                                Variant="Variant.Filled"
+                                Class="ml-auto">
+                                    Save Changes
+                                </MudButton>
+                            </div>
+                        </MudForm>
+                    </MudPaper>
+
+                    <MudPaper Class="pa-4 mt-4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="@(()=>form.Validate())">Validate</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="@(()=>form.ResetAsync())" Class="mx-2">Reset</MudButton>
+                        <MudButton Variant="Variant.Filled" DropShadow="false" OnClick="@(()=>form.ResetValidation())">Reset Validation</MudButton>
+                    </MudPaper>
+                </MudItem>
+
+                <MudItem xs="12" sm="5">
+                    <MudPaper Class="pa-4 mud-height-full">
+                        <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                        @foreach (var error in errors)
+                        {
+                            <MudText Color="@Color.Error">@error</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        } else
+        {
+            <p><em>You are not allowed to see this content.</em></p>
+        }
+
+    </Authorized>
+
+    <NotAuthorized>
+        You are not authorized to see this page. Please <a href="authentication/login">Log in</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public int BookId { get; set; }
+    public EditBookRequest book = new EditBookRequest();
+    bool success;
+    string[] errors = { };
+    MudForm form;
+    private string role = "Admin";
+    private bool isAdmin;
+    private bool isRegistered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var registrationState = await LibraryService.CheckRegistrationState();
+
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        if (registrationState)
+        {
+            isRegistered = true;
+        }
+        else
+        {
+            isRegistered = false;
+            Snackbar.Add("You are not authorized to see this page. Please complete your registration first.", Severity.Warning);
+            Navigation.NavigateTo("/registration");
+        }
+
+        book = await LibraryService.GetBookByIdAsync(BookId);
+
+        isAdmin = UserExtensions.HasRole(user, role);
+
+        if (!isAdmin)
+        {
+            Navigation.NavigateTo("/");
+            Snackbar.Add("You are not allowed to see this content.", Severity.Warning);
+        }
+    }
+
+    protected async Task SaveChanges()
+    {
+        await form.Validate();
+
+        if (!form.IsValid)
+            return;
+
+        var success = await LibraryService.EditBookAsync(book);
+
+        if (success)
+        {
+            Console.WriteLine("Book updated successfully!");
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Console.WriteLine("Book couldn't be updated. Please try again.");
+        }
+    }
+}

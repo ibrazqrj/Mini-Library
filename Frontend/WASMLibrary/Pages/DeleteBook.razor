@@ -1,0 +1,170 @@
+﻿@page "/deletebook"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>Delete Book</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="authContext">
+        @if (isRegistered)
+        {
+            @if (books == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else
+            {
+                @if(isAdmin)
+                {
+
+                    <MudTable Items="@books" Filter="FilterFunc1" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Delete Book</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                        </ToolBarContent>
+
+                        <HeaderContent>
+                            <MudTh>Id</MudTh>
+                            <MudTh>Title</MudTh>
+                            <MudTh>Author</MudTh>
+                            <MudTh>ISBN</MudTh>
+                            <MudTh>Release year</MudTh>
+                            <MudTh>Available</MudTh>
+                        </HeaderContent>
+
+                        <RowTemplate Context="book">
+                            <MudTd DataLabel="Id">@book.Id</MudTd>
+                            <MudTd DataLabel="Title">@book.Title</MudTd>
+                            <MudTd DataLabel="Author">@book.Author</MudTd>
+                            <MudTd DataLabel="ISBN">@book.ISBN</MudTd>
+                            <MudTd DataLabel="Release year">@book.YearPublished</MudTd>
+                            <MudTd DataLabel="Available">@(book.IsAvailable ? "Yes" : "No")</MudTd>
+                        </RowTemplate>
+
+                        <PagerContent>
+                            <MudTablePager />
+                        </PagerContent>
+                    </MudTable>
+                    <hr />
+                    <div class="inputform">
+                        <div class="formattedform">
+                            <div class="numericfield">
+                            <MudNumericField @bind-Value="selectedBookId" Label="Book Id" Variant="Variant.Outlined"></MudNumericField>
+                            </div>
+                            <div class="mudButton">
+                            <MudButton Variant="Variant.Filled" OnClick="HandleValidSubmit" StartIcon="@Icons.Material.Filled.Delete" Color="Color.Error">Delete</MudButton>
+                            </div>
+                        </div>
+                    </div>
+                } else
+                {
+                    <p><em>You are not allowed to see this content.</em></p>
+                }
+            }
+        }
+    </Authorized>
+    <NotAuthorized>
+        You are not authorized to see this page. Please <a href="authentication/login">Log in</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public List<Book> books = new List<Book>();
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private int selectedBookId { get; set; }
+    private string role = "Admin";
+    private bool isAdmin;
+    private bool isRegistered;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isAdmin = UserExtensions.HasRole(user, role);
+        var registrationState = await LibraryService.CheckRegistrationState();
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        if (registrationState)
+        {
+            isRegistered = true;
+        }
+        else
+        {
+            isRegistered = false;
+            Snackbar.Add("You are not authorized to see this page. Please complete your registration first.", Severity.Warning);
+            Navigation.NavigateTo("/registration");
+        }
+
+        if (!isAdmin)
+        {
+            Navigation.NavigateTo("/");
+            Snackbar.Add("You are not allowed to see this content.", Severity.Warning);
+        }
+
+        books = await LibraryService.GetBooksAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        bool bookFound = false;
+
+        foreach (Book book in books)
+        {
+            if (book.Id == selectedBookId)
+            {
+                bookFound = true;
+            }
+        }
+
+        if (bookFound)
+        {
+            var success = await LibraryService.DeleteBookAsync(selectedBookId);
+
+            if (success)
+            {
+                Snackbar.Add("Book successfully deleted", Severity.Success);
+                Navigation.NavigateTo("/allbooks");
+            }
+            else if (success)
+            {
+                Snackbar.Add("Couldn't delete book. Please try again.", Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add($"{selectedBookId} is not an book id. Please try again.", Severity.Error);
+        }
+    }
+
+    private bool FilterFunc1(Book book) => FilterFunc(book, searchString1);
+
+    private bool FilterFunc(Book book, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (book.Author.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (book.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{book.ISBN} {book.YearPublished}".Contains(searchString))
+            return true;
+        return false;
+    }
+}

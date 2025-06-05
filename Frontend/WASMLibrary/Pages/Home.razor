@@ -1,0 +1,146 @@
+﻿@page "/home"
+@using MudBlazor
+@using WASMLibrary.Models
+@using WASMLibrary.Models.Requests
+@using WASMLibrary.API
+@using WASMLibrary.Index
+@using WASMLibrary.Services
+@inject ILibraryService LibraryService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+
+<PageTitle>Home</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (isRegistered)
+        {
+            <div class="dashboard">
+                @if (profile != null)
+                {
+                    <div class="dashboard">
+                        <h3>Welcome @profile.UserName, to the mini library!</h3>
+                    </div>
+                }
+                <div class="info-boxes">
+                    <div class="info-box">
+                        <div class="box-iconheart">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M11.9973 9.33059C11.1975 8.4216 9.8639 8.17708 8.86188 9.00945C7.85986 9.84182 7.71879 11.2335 8.50568 12.2179C8.97361 12.8033 10.1197 13.8531 10.9719 14.6079C11.3237 14.9195 11.4996 15.0753 11.7114 15.1385C11.8925 15.1926 12.102 15.1926 12.2832 15.1385C12.4949 15.0753 12.6708 14.9195 13.0226 14.6079C13.8748 13.8531 15.0209 12.8033 15.4888 12.2179C16.2757 11.2335 16.1519 9.83306 15.1326 9.00945C14.1134 8.18584 12.797 8.4216 11.9973 9.33059Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="box-content">
+                            @if (mostBorrowedBookTimes == "0")
+                            {
+                                <span class="big">
+                                    -
+                                </span>
+                                <text> No book has been borrowed yet.</text>
+                            }
+                            else if (mostBorrowedBookTitle == noBookEntry)
+                            {
+                                <span class="big">
+                                    @mostBorrowedBookTitle
+                                </span>
+                                <text> Books are coming soon!</text>
+                            }
+                            else
+                            {
+                                <span class="big">
+                                    @mostBorrowedBookTitle
+                                </span>
+                                <text>Is the most borrowed book in our library!The book was borrowed @mostBorrowedBookTimes time(s).</text>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="info-box active">
+                        <div class="box-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 19V6.2C5 5.0799 5 4.51984 5.21799 4.09202C5.40973 3.71569 5.71569 3.40973 6.09202 3.21799C6.51984 3 7.0799 3 8.2 3H15.8C16.9201 3 17.4802 3 17.908 3.21799C18.2843 3.40973 18.5903 3.71569 18.782 4.09202C19 4.51984 19 5.0799 19 6.2V17H7C5.89543 17 5 17.8954 5 19ZM5 19C5 20.1046 5.89543 21 7 21H19M18 17V21M15 13.5C14.7164 12.3589 13.481 11.5 12 11.5C10.519 11.5 9.28364 12.3589 9 13.5M12 7.5H12.01M13 7.5C13 8.05228 12.5523 8.5 12 8.5C11.4477 8.5 11 8.05228 11 7.5C11 6.94772 11.4477 6.5 12 6.5C12.5523 6.5 13 6.94772 13 7.5Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="box-content">
+                            <span class="big">@totalUserAmount</span>
+                            User(s) are registered in the library system.
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="box-icontoday">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 9H21M9 15L11 17L15 13M7 3V5M17 3V5M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51989 21 5.0799 21 6.2 21Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="box-content">
+                            <span class="big">@actualBorrowedBooksAmount</span>
+                            Book(s) are actually borrowed.
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="box-icontotal">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.61061 4 7.46589 5.04751 6 6.70835C5.91595 6.80358 5.83413 6.90082 5.75463 7M12 8V12L14.5 14.5M5.75391 4.00391V7.00391H8.75391" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="box-content">
+                            <span class="big">@totalBorrowedBooksAmount</span>
+                            Book(s) have been borrowed in total.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        } else
+        {
+            <p>You are not authorized to see this page. To see this page, please complete your registration. You're being redirected...</p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        You are not authorized to see this page. Please <a href="authentication/login">Log in</a>.
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private string ?mostBorrowedBookTitle;
+    private string ?mostBorrowedBookTimes;
+    private string ?totalUserAmount;
+    private string ?totalBorrowedBooksAmount;
+    private string ?actualBorrowedBooksAmount;
+    private ChangeUserDataRequest ?profile;
+    private bool isRegistered;
+    private string noBookEntry = "There is no book entry.";
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var registrationState = await LibraryService.CheckRegistrationState();
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        if (registrationState)
+        {
+            isRegistered = true;
+        }
+        else
+        {
+            isRegistered = false;
+            Snackbar.Add("You are not authorized to see this page. Please complete your registration first.", Severity.Warning);
+            Navigation.NavigateTo("/registration");
+        }
+
+        mostBorrowedBookTitle = await LibraryService.ShowMostBorrowedBookTitle();
+        mostBorrowedBookTimes = await LibraryService.ShowMostBorrowedBookTimes();
+        totalUserAmount = await LibraryService.ShowTotalUserAmount();
+        actualBorrowedBooksAmount = await LibraryService.ShowCurrentlyBorrowedBooksAmount();
+        totalBorrowedBooksAmount = await LibraryService.ShowTotalBorrowedBooksAmount();
+
+        profile = await LibraryService.GetUserInfo();
+    }
+}

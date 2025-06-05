@@ -1,0 +1,6 @@
+﻿.menu-container {
+    display: flex;
+    justify-content: flex-start; /* alles nach links */
+    gap: 12px;
+    padding: 8px;
+}
