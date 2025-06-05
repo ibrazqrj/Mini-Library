@@ -112,3 +112,11 @@ git commit -m 'Add amazing feature'
 git push origin feature/amazing-feature
 
 # Open a Pull Request
+```
+
+---
+
+## 📧 Contact
+
+Created by [Ibrahim Zqrj](https://github.com/ibrazqrj) – reach out via GitHub or open an issue.
+
