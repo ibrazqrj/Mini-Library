@@ -22,7 +22,33 @@
 ---
 
 ## 🖼 UI Preview
-> Add your own screenshots here (AllBooks page, Profile page, Analytics dashboard, etc.)
+
+### 📄 Index Page
+![Index Page](https://i.imgur.com/qnCncmy.png)
+
+### 🏠 Home Page
+![Home Page](https://i.imgur.com/uclC3eg.png)
+
+### 📚 Book List
+![Book List](https://i.imgur.com/KM7B8Sv.png)
+
+### ➕ Add a Book
+![Add a Book](https://i.imgur.com/ueYvXvK.png)
+
+### ✏️ Edit a Book
+![Edit a Book](https://i.imgur.com/JtLEtcY.png)
+
+### 🗑️ Delete a Book
+![Delete a Book](https://i.imgur.com/xDwD071.png)
+
+### 📖 Borrow a Book
+![Borrow a Book](https://i.imgur.com/iFPjy8P.png)
+
+### 🔙 Return a Book
+![Return a Book](https://i.imgur.com/BD13opQ.png)
+
+### 👤 User Profile
+![Profile](https://i.imgur.com/YUzAaR7.png)
 
 ---
 
@@ -118,5 +144,5 @@ git push origin feature/amazing-feature
 
 ## 📧 Contact
 
-Created by [Ibrahim Zqrj](https://github.com/ibrazqrj) – reach out via GitHub or open an issue.
+Created by [@ibrazqrj](https://github.com/ibrazqrj) – reach out via GitHub or open an issue.
 
